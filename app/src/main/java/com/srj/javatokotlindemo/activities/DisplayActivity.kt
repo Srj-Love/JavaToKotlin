@@ -7,7 +7,6 @@ import android.support.v4.view.GravityCompat
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.MenuItem
 import com.srj.javatokotlindemo.R
@@ -28,10 +27,9 @@ import java.util.*
 
 class DisplayActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
-    private var mRecyclerView: RecyclerView? = null
-    private var mDisplayAdapter: DisplayAdapter? = null
+    private var displayAdapter: DisplayAdapter? = null
     private var browsedRepositories: List<Repository>? = null
-    private var mService: GithubAPIService? = null
+    private var githubAPIService: GithubAPIService? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,7 +44,7 @@ class DisplayActivity : AppCompatActivity(), NavigationView.OnNavigationItemSele
         layoutManager.orientation = LinearLayoutManager.VERTICAL
         recyclerView!!.layoutManager = layoutManager
 
-        mService = RetrofitClient.getGithubAPIService()
+        githubAPIService = RetrofitClient.getGithubAPIService()
 
         val navigationView = findViewById<NavigationView>(R.id.nav_view)
         navigationView.setNavigationItemSelectedListener(this)
@@ -76,7 +74,7 @@ class DisplayActivity : AppCompatActivity(), NavigationView.OnNavigationItemSele
 
     private fun fetchUserRepositories(githubUser: String) {
 
-        mService!!.searchRepositoriesByUser(githubUser).enqueue(object: Callback<List<Repository>> {
+        githubAPIService!!.searchRepositoriesByUser(githubUser).enqueue(object: Callback<List<Repository>> {
             override fun onFailure(call: Call<List<Repository>>?, t: Throwable) {
                 Util.showMessage(this@DisplayActivity,t.message)
 
@@ -109,7 +107,7 @@ class DisplayActivity : AppCompatActivity(), NavigationView.OnNavigationItemSele
             queryRepo += " language:$repoLanguage"
         query["q"] = queryRepo
 
-        mService!!.searchRepositories(query).enqueue(object : Callback<SearchResponse> {
+        githubAPIService!!.searchRepositories(query).enqueue(object : Callback<SearchResponse> {
             override fun onResponse(call: Call<SearchResponse>, response: Response<SearchResponse>) {
                 if (response.isSuccessful) {
                     Log.i(TAG, "posts loaded from API $response")
@@ -134,8 +132,8 @@ class DisplayActivity : AppCompatActivity(), NavigationView.OnNavigationItemSele
     }
 
     private fun setupRecyclerView(items: List<Repository>?) {
-        mDisplayAdapter = DisplayAdapter(this, items)
-        mRecyclerView!!.adapter = mDisplayAdapter
+        displayAdapter = DisplayAdapter(this, items)
+        recyclerView!!.adapter = displayAdapter
     }
 
     override fun onNavigationItemSelected(menuItem: MenuItem): Boolean {
@@ -160,7 +158,7 @@ class DisplayActivity : AppCompatActivity(), NavigationView.OnNavigationItemSele
     }
 
     private fun showBrowsedResults() {
-        mDisplayAdapter!!.swap(browsedRepositories)
+        displayAdapter!!.swap(browsedRepositories)
     }
 
     private fun showBookmarks() {
